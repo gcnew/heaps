@@ -10,49 +10,38 @@ export {
 
 /* Types */
 
-type Nil     = { kind: 'nil' }
-type Cons<T> = { kind: 'cons', value: T, rest: List<T> }
-
-type List<T> = Cons<T> | Nil
-
 type PairingHeap<T> = {
     comparator: OrdComparator<T>,
-    tree: PairingTree<T>
+    tree: PairingTree<T> | undefined
 }
 
-type PairingTree<T> = { kind: 'empty' }
-                    | { kind: 'branch', item: T, subtrees: List<PairingTree<T>> }
+type List<T> = { value: T, rest: List<T> | undefined }
 
-
-const Nil = { kind: 'nil' as 'nil' };
-const emptyTree = { kind: 'empty' as 'empty' };
+type PairingTree<T> = {
+    item: T,
+    subtrees: List<PairingTree<T>> | undefined
+}
 
 
 /* API Functions */
 
 function isEmpty<T>(heap: PairingHeap<T>): boolean {
-    return heap.tree.kind === 'empty';
+    return !heap.tree;
 }
 
 function peek<T>(heap: PairingHeap<T>): T | undefined {
-    return heap.tree.kind === 'branch'
-        ? heap.tree.item
-        : undefined;
+    return heap.tree && heap.tree.item;
 }
 
 function pop<T>(heap: PairingHeap<T>): [T, PairingHeap<T>] | undefined {
-    if (heap.tree.kind === 'empty') {
-        return undefined;
-    }
-
-    return [
+    return heap.tree && [
         heap.tree.item,
         mkHeap2(mergePairs(heap.tree.subtrees, heap.comparator), heap.comparator)
     ];
 }
 
 function push<T>(item: T, heap: PairingHeap<T>) {
-    if (heap.tree.kind === 'empty') {
+    if (!heap.tree) {
         return singleton(item, heap.comparator);
     }
 
@@ -60,8 +49,8 @@ function push<T>(item: T, heap: PairingHeap<T>) {
     // item that would otherwise be immediately destructured. We also save one more
     // node if `item` and `heap.tree.item` are equal as we favour `item`.
     const newTree = heap.comparator(item, heap.tree.item) !== 'GT'
-        ? mkTree(item, cons(heap.tree, Nil))
-        : mkTree(heap.tree.item, cons(mkTree(item, Nil), heap.tree.subtrees));
+        ? mkTree(item, cons(heap.tree, undefined))
+        : mkTree(heap.tree.item, cons(mkTree(item, undefined), heap.tree.subtrees));
 
     return mkHeap2(newTree, heap.comparator);
 }
@@ -76,12 +65,16 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): PairingHeap<T> {
 
 /* Private Implementation Functions */
 
-function merge<T>(tree1: PairingTree<T>, tree2: PairingTree<T>, cmp: OrdComparator<T>): PairingTree<T> {
-    if (tree1.kind === 'empty') {
+function merge<T>(
+    tree1: PairingTree<T> | undefined,
+    tree2: PairingTree<T> | undefined,
+    cmp: OrdComparator<T>
+): PairingTree<T> | undefined {
+    if (!tree1) {
         return tree2;
     }
 
-    if (tree2.kind === 'empty') {
+    if (!tree2) {
         return tree1;
     }
 
@@ -90,12 +83,12 @@ function merge<T>(tree1: PairingTree<T>, tree2: PairingTree<T>, cmp: OrdComparat
         : mkTree(tree2.item, cons(tree1, tree2.subtrees));
 }
 
-function mergePairs<T>(list: List<PairingTree<T>>, cmp: OrdComparator<T>): PairingTree<T> {
-    if (list.kind === 'nil') {
-        return emptyTree;
+function mergePairs<T>(list: List<PairingTree<T>> | undefined, cmp: OrdComparator<T>): PairingTree<T> | undefined {
+    if (!list) {
+        return undefined;
     }
 
-    if (list.rest.kind === 'nil') {
+    if (!list.rest) {
         return list.value;
     }
 
@@ -109,24 +102,21 @@ function mergePairs<T>(list: List<PairingTree<T>>, cmp: OrdComparator<T>): Pairi
 /* Constructors */
 
 function mkHeap<T>(comparator: OrdComparator<T>): PairingHeap<T> {
-    return {
-        comparator,
-        tree: emptyTree
-    };
+    return { comparator, tree: undefined };
 }
 
 function singleton<T>(item: T, comparator: OrdComparator<T>): PairingHeap<T> {
-    return mkHeap2(mkTree(item, Nil), comparator);
+    return mkHeap2(mkTree(item, undefined), comparator);
 }
 
-function mkHeap2<T>(tree: PairingTree<T>, comparator: OrdComparator<T>): PairingHeap<T> {
+function mkHeap2<T>(tree: PairingTree<T> | undefined, comparator: OrdComparator<T>): PairingHeap<T> {
     return { comparator, tree };
 }
 
-function mkTree<T>(item: T, subtrees: List<PairingTree<T>>): PairingTree<T> {
-    return { kind: 'branch', item, subtrees };
+function mkTree<T>(item: T, subtrees: List<PairingTree<T>> | undefined): PairingTree<T> {
+    return { item, subtrees };
 }
 
-function cons<T>(x: T, xs: List<T>): List<T> {
-    return { kind: 'cons', value: x, rest: xs };
+function cons<T>(x: T, xs: List<T> | undefined): List<T> {
+    return { value: x, rest: xs };
 }
