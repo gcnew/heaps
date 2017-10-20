@@ -1,0 +1,38 @@
+{
+    "name": "heaps",
+    "version": "0.1.0",
+    "license": "MIT",
+
+    "description": "TypeScript implementation of several heap data structures",
+
+    "keywords": [ "heap", "typescript", "persistent", "binary heap", "pairing heap" ],
+
+    "author": {
+        "name": "gcnew"
+    },
+
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/gcnew/heaps.git"
+    },
+
+    "files": [
+        "src", "tsconfig.json"
+    ],
+
+    "devDependencies": {
+        "pietr": "",
+
+        "source-map-support": "",
+        "chai": "",
+
+        "@types/chai": ""
+    },
+
+    "scripts": {
+        "test-no-build": "pietr --require=source-map-support/register --pattern='built/**/*.js'",
+        "test":          "tsc && npm run test-no-build"
+    },
+
+    "private": true
+}

@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "esnext",
+        "lib": [ "es6" ],
+
+        "sourceMap": true,
+
+        "forceConsistentCasingInFileNames": true,
+
+        "noUnusedParameters": true,
+        // "noUnusedLocals": true,
+        "noImplicitThis": true,
+        "noEmitOnError": true,
+        "noImplicitAny": true,
+        "removeComments": true,
+        "strictNullChecks": true,
+        "allowUnusedLabels": false,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "allowUnreachableCode": false,
+
+        "outDir": "built"
+    },
+
+    "include": [
+        "src/*.ts"
+        , "tests/**/*.ts"
+    ]
+}
