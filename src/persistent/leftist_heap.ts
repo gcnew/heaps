@@ -54,10 +54,32 @@ function push<T>(item: T, heap: LeftistHeap<T>) {
 }
 
 function heapify<T>(items: T[], comparator: OrdComparator<T>): LeftistHeap<T> {
-    return items.reduce(
-        (heap, x) => push(x, heap),
-        mkHeap(comparator)
+    // Pairwise merging should be O(n) according to Wikipedia.
+    // The naive `push` based approach is O(n * log(n)).
+
+    // Basic idea: we do parwise merges until there is only one tree left.
+    // Instead of mapping the initial values into singleton trees, we are doing
+    // a one-off optimized merge and then we proceed with normal tree merges.
+
+    const primTrees = combinePairs(
+        items,
+        (x, y) => comparator(x, y) === 'LT'
+            ? mkTree(x, 1, mkTree(y, 1, undefined, undefined), undefined)
+            : mkTree(y, 1, mkTree(x, 1, undefined, undefined), undefined),
+        x => mkTree(x, 1, undefined, undefined)
     );
+
+    let unmerged = primTrees;
+    while (unmerged.length > 1) {
+        unmerged = combinePairs(
+            unmerged,
+            (x, y) => merge(x, y, comparator)!,
+            x => x
+        );
+    }
+
+    return unmerged[0] ? mkHeap2(unmerged[0], comparator)
+                       : mkHeap(comparator);
 }
 
 
@@ -90,6 +112,26 @@ function join<T>(item: T, tree1: LeftistTree<T> | undefined, tree2: LeftistTree<
         ? mkTree(item, rank2 + 1, tree1, tree2)
         : mkTree(item, rank1 + 1, tree2, tree1);
 }
+
+// I think I've seen it called treeFold, but I couldn't find a reference.
+function combinePairs<A, B>(xs: A[], combine: (x: A, y: A) => B, map: (x: A) => B) {
+    const retval = [];
+
+    let i;
+    for (i = 0; i + 1 < xs.length; i += 2) {
+        const x = xs[i];
+        const y = xs[i + 1];
+
+        retval.push(combine(x, y));
+    }
+
+    if (i < xs.length) {
+        retval.push(map(xs[i]));
+    }
+
+    return retval;
+}
+
 
 /* Constructors */
 
