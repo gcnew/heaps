@@ -9,7 +9,7 @@ export {
 
 /* Types */
 
-type BinHeap<T> = {
+interface BinHeap<T> {
     comparator: OrdComparator<T>,
     data: T[]
 }

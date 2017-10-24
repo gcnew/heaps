@@ -10,14 +10,17 @@ export {
 
 /* Types */
 
-type PairingHeap<T> = {
+interface PairingHeap<T> {
     comparator: OrdComparator<T>,
     tree: PairingTree<T> | undefined
 }
 
-type List<T> = { value: T, rest: List<T> | undefined }
+interface List<T> {
+    value: T,
+    rest: List<T> | undefined
+}
 
-type PairingTree<T> = {
+interface PairingTree<T> {
     item: T,
     subtrees: List<PairingTree<T>> | undefined
 }
