@@ -24,11 +24,21 @@ function heapSort(heap: PairingHeap<number>) {
     return retval;
 }
 
-function mkRandomArray(length: number) {
+function mkRandomArray(length: number, randRange = 1000) {
     const retval = [];
 
     for (let i = length; i > 0; --i) {
-        retval.push((Math.random() * 1000) | 0);
+        retval.push((Math.random() * randRange) | 0);
+    }
+
+    return retval;
+}
+
+function replicate<T>(x: T, n: number) {
+    const retval = [];
+
+    for (; n > 0; --n) {
+        retval.push(x);
     }
 
     return retval;
@@ -89,7 +99,7 @@ test('Push / Pop - max heap', () => {
     }
 });
 
-test('Persistence - push', () => {
+test('Persistence - push ascending', () => {
     const heaps = [ mkHeap(numOrdCmp) ];
     const expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
@@ -104,10 +114,24 @@ test('Persistence - push', () => {
     }
 });
 
+test('Persistence - push descending', () => {
+    const heaps = [ mkHeap(numOrdCmp) ];
+    const descending = [9, 8, 7, 6, 5, 4, 3, 2, 1, 0];
+
+    for (let i = 0; i < descending.length; ++i) {
+        const last = heaps[heaps.length - 1];
+        heaps.push(push(descending[i], last));
+    }
+
+    for (let i = 0; i < heaps.length; ++i) {
+        const arr = heapSort(heaps[i]);
+        assert.deepEqual(arr, descending.slice(0, i).reverse());
+    }
+});
+
 test('Persistence - pop', () => {
     const expected = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     const heaps = [ heapify(expected, numOrdCmp) ];
-
 
     for (let i = 0; i < expected.length; ++i) {
         const last = heaps[heaps.length - 1];
@@ -118,4 +142,35 @@ test('Persistence - pop', () => {
         const arr = heapSort(heaps[i]);
         assert.deepEqual(arr, expected.slice(i));
     }
+});
+
+test('Many same', () => {
+    const arr = mkRandomArray(100, 10);
+    const sorted = arr.slice().sort();
+
+    // using heapify
+    assert.deepEqual(heapSort(heapify(arr, numOrdCmp)), sorted);
+
+    // using push
+    const heap = arr.reduce(
+        (h, x) => push(x, h),
+        mkHeap(numOrdCmp)
+    );
+
+    assert.deepEqual(heapSort(heap), sorted);
+});
+
+test('All same', () => {
+    const expected = replicate(7, 29);
+
+    // using heapify
+    assert.deepEqual(heapSort(heapify(expected, numOrdCmp)), expected);
+
+    // using push
+    const heap = expected.reduce(
+        (h, x) => push(x, h),
+        mkHeap(numOrdCmp)
+    );
+
+    assert.deepEqual(heapSort(heap), expected);
 });
