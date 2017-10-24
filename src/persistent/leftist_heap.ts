@@ -10,7 +10,12 @@ export {
 
 /* Types */
 
-// Height balanced leftist tree, the rank is the height of the tree.
+// Height biased leftist tree. The rank is the minimum distance to an empty subtree.
+//
+// e.g. rank(undefined)                     == 0
+//      rank(singleton(x))                  == 1
+//      rank(left rank = 5, right rank = 0) == 0
+
 interface LeftistTree<T> {
     item: T,
     rank: number,
