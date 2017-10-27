@@ -7,6 +7,7 @@
  - [Pairing heap](https://en.wikipedia.org/wiki/Pairing_heap) - persistent, has very good real-world performance
  - [Leftist heap](https://en.wikipedia.org/wiki/Leftist_tree) - persistent, left biased tree
  - [Skew heap](https://en.wikipedia.org/wiki/Skew_heap) - persistent, reminiscent of Leftist Tree, but doesn't use ranks and has better merge performance
+ - [Binomial heap](https://en.wikipedia.org/wiki/Binomial_heap) - persistent, uses array as subtree storage
 
 
 ### A note on implementation
