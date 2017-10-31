@@ -4,7 +4,7 @@ import { OrdComparator } from '../ordering'
 export {
     BinomialHeap, BinomialTree,
 
-    mkHeap, singleton, isEmpty, peek, pop, push, heapify
+    mkHeap, singleton, isEmpty, peek, pop, push, heapify, heapify2
 }
 
 
@@ -12,13 +12,15 @@ export {
 
 interface BinomialHeap<T> {
     comparator: OrdComparator<T>,
-    forest: (BinomialTree<T> | undefined)[]
+    forest: Forest<T>
 }
 
 interface BinomialTree<T> {
     item: T,
     subtrees: BinomialTree<T>[]
 }
+
+type Forest<T> = (BinomialTree<T> | undefined)[]
 
 const emptyArray: never[] = [];
 
@@ -34,7 +36,7 @@ function peek<T>(heap: BinomialHeap<T>): T | undefined {
         return undefined;
     }
 
-    const tree = heap.forest[findMinElementIdx(heap)];
+    const tree = heap.forest[findMinElementIdx(heap.forest, heap.comparator)];
     return tree!.item;
 }
 
@@ -43,7 +45,7 @@ function pop<T>(heap: BinomialHeap<T>): [T, BinomialHeap<T>] | undefined {
         return undefined;
     }
 
-    const minIdx = findMinElementIdx(heap);
+    const minIdx = findMinElementIdx(heap.forest, heap.comparator);
     const tree = heap.forest[minIdx]!;
 
     return [
@@ -69,10 +71,30 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): BinomialHeap<T> {
     );
 }
 
+function heapify2<T>(items: T[], comparator: OrdComparator<T>): BinomialHeap<T> {
+    const forest = [];
+
+    for (let i = 1, start = 0; i <= items.length; i <<= 1) {
+        let tree;
+
+        if (items.length & i) {
+            tree = heapifyBinary(items, start, start + i, comparator);
+            start += i;
+        }
+        else {
+            tree = undefined;
+        }
+
+        forest.push(tree);
+    }
+
+    return mkHeap2(forest, comparator);
+}
+
 
 /* Private Implementation Functions */
 
-function removeTree<T>(idx: number, forest: (BinomialTree<T> | undefined)[]) {
+function removeTree<T>(idx: number, forest: Forest<T>) {
     const prev = prevTreeIndex(idx, forest);
     const isLastTree = forest.length === idx + 1;
 
@@ -87,7 +109,7 @@ function removeTree<T>(idx: number, forest: (BinomialTree<T> | undefined)[]) {
     return retval;
 }
 
-function prevTreeIndex<T>(stop: number, forest: (BinomialTree<T> | undefined)[]) {
+function prevTreeIndex<T>(stop: number, forest: Forest<T>) {
     let i = 0;
     let prev = -1;
 
@@ -101,17 +123,9 @@ function prevTreeIndex<T>(stop: number, forest: (BinomialTree<T> | undefined)[])
 }
 
 function merge<T>(tree1: BinomialTree<T>[], tree2: BinomialTree<T>[], cmp: OrdComparator<T>): BinomialTree<T>[];
-function merge<T>(
-    tree1: (BinomialTree<T> | undefined)[],
-    tree2: (BinomialTree<T> | undefined)[],
-    cmp: OrdComparator<T>
-): (BinomialTree<T> | undefined)[];
+function merge<T>(tree1: Forest<T>, tree2: Forest<T>, cmp: OrdComparator<T>): Forest<T>;
 
-function merge<T>(
-    tree1: (BinomialTree<T> | undefined)[],
-    tree2: (BinomialTree<T> | undefined)[],
-    cmp: OrdComparator<T>
-): (BinomialTree<T> | undefined)[] {
+function merge<T>(tree1: Forest<T>, tree2: Forest<T>, cmp: OrdComparator<T>): Forest<T> {
     if (!tree1.length) {
         return tree2;
     }
@@ -178,19 +192,48 @@ function appendSubtree<T>(parent: BinomialTree<T>, toAppend: BinomialTree<T>) {
     );
 }
 
-function findMinElementIdx<T>(heap: BinomialHeap<T>) {
-    if (!heap.forest || !heap.forest.length) throw new Error('Broken heap');
+function findMinElementIdx<T>(forest: Forest<T>, comparator: OrdComparator<T>) {
+    if (!forest.length) throw new Error('Broken heap');
 
-    return heap.forest.reduce(
+    return forest.reduce(
         (currIdx, x, newIdx, forest) => {
             const tree = forest[currIdx];
 
-            return !tree || tree && x && heap.comparator(x.item, tree.item) === 'LT'
+            return !tree || tree && x && comparator(x.item, tree.item) === 'LT'
                 ? newIdx
                 : currIdx;
         },
         0
     );
+}
+
+function heapifyBinary<T>(items: T[], start: number, end: number, comparator: OrdComparator<T>): BinomialTree<T> {
+    const subtrees = [];
+    const len = end - start;
+
+    for (let i = 1, offset = start; i < len; i <<= 1) {
+        subtrees.push(heapifyBinary(items, offset, offset + i, comparator));
+        offset += i;
+    }
+
+    return siftDown(items[end - 1], subtrees, comparator);
+}
+
+function siftDown<T>(item: T, subtrees: BinomialTree<T>[], comparator: OrdComparator<T>) {
+    if (!subtrees.length) {
+        return mkTree(item, emptyArray);
+    }
+
+    const minIdx = findMinElementIdx(subtrees, comparator);
+    if (comparator(item, subtrees[minIdx].item) !== 'GT') {
+        return mkTree(item, subtrees);
+    }
+
+    // we can mutate them as they are not used anywhere else, but..
+    const newSubtrees = subtrees.slice();
+    newSubtrees[minIdx] = siftDown(item, subtrees[minIdx].subtrees, comparator);
+
+    return mkTree(subtrees[minIdx].item, newSubtrees);
 }
 
 
@@ -204,7 +247,7 @@ function singleton<T>(item: T, comparator: OrdComparator<T>): BinomialHeap<T> {
     return mkHeap2([ mkTree(item, emptyArray) ], comparator);
 }
 
-function mkHeap2<T>(forest: (BinomialTree<T> | undefined)[], comparator: OrdComparator<T>): BinomialHeap<T> {
+function mkHeap2<T>(forest: Forest<T>, comparator: OrdComparator<T>): BinomialHeap<T> {
     return { comparator, forest };
 }
 
