@@ -73,7 +73,7 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): LeftistHeap<T> {
     while (unmerged.length > 1) {
         unmerged = combinePairs(
             unmerged,
-            (x, y) => merge(x, y, comparator)!,
+            (x, y) => merge(x, y, comparator),
             x => x
         );
     }
@@ -84,6 +84,9 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): LeftistHeap<T> {
 
 
 /* Private Implementation Functions */
+
+function merge<T>(tree1: LeftistTree<T>, tree2: LeftistTree<T>, cmp: OrdComparator<T>): LeftistTree<T>;
+function merge<T>(tree1: LeftistTree<T> | undefined, tree2: LeftistTree<T> | undefined, cmp: OrdComparator<T>): LeftistTree<T> | undefined;
 
 function merge<T>(
     tree1: LeftistTree<T> | undefined,

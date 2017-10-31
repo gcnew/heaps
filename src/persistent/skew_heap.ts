@@ -71,7 +71,7 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): SkewHeap<T> {
     while (unmerged.length > 1) {
         unmerged = combinePairs(
             unmerged,
-            (x, y) => merge(x, y, comparator)!,
+            (x, y) => merge(x, y, comparator),
             x => x
         );
     }
@@ -82,6 +82,9 @@ function heapify<T>(items: T[], comparator: OrdComparator<T>): SkewHeap<T> {
 
 
 /* Private Implementation Functions */
+
+function merge<T>(tree1: SkewTree<T>, tree2: SkewTree<T>, cmp: OrdComparator<T>): SkewTree<T>;
+function merge<T>(tree1: SkewTree<T> | undefined, tree2: SkewTree<T> | undefined, cmp: OrdComparator<T>): SkewTree<T> | undefined;
 
 function merge<T>(
     tree1: SkewTree<T> | undefined,
