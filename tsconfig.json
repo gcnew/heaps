@@ -11,7 +11,7 @@
         "noUnusedParameters": true,
         // "noUnusedLocals": true,
         "noImplicitThis": true,
-        // "strictFunctionTypes": true,
+        "strictFunctionTypes": true,
         "noEmitOnError": true,
         "noImplicitAny": true,
         // "removeComments": true,
