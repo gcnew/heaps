@@ -9,7 +9,7 @@ export {
 
     cons, snoc, append,
 
-    length,
+    isEmpty, length,
 
     head, tail, last, init, popLeft, popRight,
 
@@ -31,6 +31,10 @@ const empty = FT.mkTree<any, number>(SizeDict);
 
 function mkVector<T>(): FingerVector<T> {
     return empty;
+}
+
+function isEmpty<T>(vec: FingerVector<T>) {
+    return FT.isEmpty(vec);
 }
 
 function singleton<T>(x: T): FingerVector<T> {
@@ -80,19 +84,19 @@ function popRight<T>(vec: FingerVector<T>): [T, FingerVector<T>] | undefined {
 }
 
 function elementAt<T>(index: number, vec: FingerVector<T>): T | undefined {
-    return FT.search(vec, x => x < index);
+    return FT.search(vec, x => index < x);
 }
 
 function splitAt<T>(index: number, vec: FingerVector<T>): [FingerVector<T>, FingerVector<T>] {
-    return FT.split(vec, x => x < index);
+    return FT.split(vec, x => index < x);
 }
 
 function take<T>(n: number, vec: FingerVector<T>): FingerVector<T> {
-    return FT.splitLeft(vec, x => x < n);
+    return FT.splitLeft(vec, x => n < x);
 }
 
 function drop<T>(n: number, vec: FingerVector<T>): FingerVector<T> {
-    return FT.splitRight(vec, x => x < n);
+    return FT.splitRight(vec, x => n < x);
 }
 
 function map<A, B>(vec: FingerVector<A>, f: (x: A) => B): FingerVector<B> {

@@ -12,7 +12,7 @@ export {
 
     newTree as mkTree, singleton, mkMeasureMonoidDict,
     isEmpty, cons, snoc, peekLeft, peekRight, popLeft, popRight,
-    concat, split, search, splitLeft, splitRight, measure, map, foldr, foldl
+    concat, split, splitWithItem, search, splitLeft, splitRight, measure, map, foldr, foldl
 }
 
 
@@ -133,6 +133,24 @@ function split<T, V>(ft: FingerTree<T, V>, pred: (v: V) => boolean): [FingerTree
         mkTree(consWorker(split.item, split.right, ft.mmDict), ft.mmDict)
     ];
 }
+
+function splitWithItem<T, V>(ft: FingerTree<T, V>, pred: (v: V) => boolean): [FingerTree<T, V>, T, FingerTree<T, V>] | undefined {
+    if (ft.tree.kind === 'ft_empty') {
+        return undefined;
+    }
+
+    if (!pred(measureTree(ft.tree, ft.mmDict))) {
+        return undefined;
+    }
+
+    const split = splitWorker(ft.tree, ft.mmDict.empty, pred, ft.mmDict);
+    return [
+        mkTree(split.left, ft.mmDict),
+        split.item,
+        mkTree(split.right, ft.mmDict)
+    ];
+}
+
 
 /* Split specialisations */
 
@@ -279,7 +297,7 @@ function popRightWorker<T, V>(tree: FT_Single<T> | FT_Deep<T, V>, mm: MeasureMon
             const item = peekRightDigit(tree.right);
 
             if (tree.right.kind !== 'one') {
-                const newTree = mkDeep(shiftRight(tree.right), tree.spine, tree.right, mm);
+                const newTree = mkDeep(tree.left, tree.spine, shiftRight(tree.right), mm);
                 return [ item, newTree ];
             }
 
@@ -319,7 +337,7 @@ function concatGo<T, V>(t1: FT<T, V>, extra: T[], t2: FT<T, V>, mm: MeasureMonoi
     }
 
     if (t2.kind === 'ft_single') {
-        return consWorker(t2.value, extra.reduce((acc, x) => snocWorker(x, acc, mm), t1 as FT<T, V>), mm); // TYH
+        return snocWorker(t2.value, extra.reduce((acc, x) => snocWorker(x, acc, mm), t1 as FT<T, V>), mm); // TYH
     }
 
     // INFO: this can be unrolled, but it's quite long, unreadble and ugly
@@ -348,8 +366,8 @@ function mkNodes<T, V>(xs: T[]): SpineNode<T, V>[] {
             retval.push(mkThree(xs[offset], xs[offset + 1], xs[offset + 2]));
         }
         else if (xs.length === offset + 4) {
-            retval.push(mkTwo(xs[offset + 0], xs[offset + 1]));
-            retval.push(mkTwo(xs[offset + 3], xs[offset + 4]));
+            retval.push(mkTwo(xs[offset], xs[offset + 1]));
+            retval.push(mkTwo(xs[offset + 2], xs[offset + 3]));
         }
 
         return retval;
@@ -898,7 +916,11 @@ function measureDigit<T, V>(d: Digit<T, V>, mmDict: MeasureMonoid<T, V>): V {
         return mmDict.measure(d.value);
     }
 
-    return d.v || (d.v = measureDigitWorker(d, mmDict));
+    if (d.v === undefined) {
+        d.v = measureDigitWorker(d, mmDict);
+    }
+
+    return d.v;
 }
 
 function measureDigitWorker<T, V>(d: Two<T, V> | Three<T, V> | Four<T, V>, mm: MeasureMonoid<T, V>): V {
@@ -918,13 +940,7 @@ function measureTree<T, V>(tree: FT<T, V>, mm: MeasureMonoid<T, V>) {
     switch (tree.kind) {
         case 'ft_empty':  return mm.empty;
         case 'ft_single': return mm.measure(tree.value);
-
-        case 'ft_deep': {
-            return mm.append(
-                mm.append(measureDigit(tree.left, mm), tree.v),
-                measureDigit(tree.right, mm)
-          );
-        }
+        case 'ft_deep':   return tree.v;
     }
 }
 
@@ -965,9 +981,8 @@ function mkSingle<T>(value: T): FT_Single<T> {
 }
 
 function mkDeep<T, V>(left: Digit<T, V>, spine: FT<SpineNode<T, V>, V>, right: Digit<T, V>, mm: MeasureMonoid<T, V>): FT_Deep<T, V> {
-    const sv = measureTree(spine, getNodeMM(mm));
     const v = mm.append(
-        mm.append(measureDigit(left, mm), sv),
+        mm.append(measureDigit(left, mm), measureTree(spine, getNodeMM(mm))),
         measureDigit(right, mm)
     );
 
