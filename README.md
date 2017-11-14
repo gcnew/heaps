@@ -3,14 +3,14 @@
 
 ### Implemented data structures
 
- - [Binary heap](https://en.wikipedia.org/wiki/Binary_heap) - mutable, array backed
- - [Pairing heap](https://en.wikipedia.org/wiki/Pairing_heap) - persistent, has very good real-world performance
- - [Leftist heap](https://en.wikipedia.org/wiki/Leftist_tree) - persistent, left biased tree
- - [Skew heap](https://en.wikipedia.org/wiki/Skew_heap) - persistent, reminiscent of Leftist Tree, but doesn't use ranks and has better merge performance
- - [Binomial heap](https://en.wikipedia.org/wiki/Binomial_heap) - persistent, uses array as subtree storage
- - Finger Heap - persistent, uses Finger Tree as storage
- - Finger Vector - persistent, uses Finger Tree as storage
- - [Finger Tree](https://en.wikipedia.org/wiki/Finger_tree) [[1]](References) - persistent, amortised O(1) dequeue operations, efficient split/concatenation  
+ - [Binary heap](src/mutable/bin_heap.ts)<sup>[[1]](References)</sup> - mutable, array backed
+ - [Pairing heap](src/persistent/pairing_heap.ts)<sup>[[2]](References)</sup> - persistent, has very good real-world performance
+ - [Leftist heap](src/persistent/leftist_heap.ts)<sup>[[3]](References)</sup> - persistent, left biased tree
+ - [Skew heap](src/persistent/skew_heap.ts)<sup>[[4]](References)</sup> - persistent, reminiscent of Leftist Tree, but doesn't use ranks and has better merge performance
+ - [Binomial heap](src/persistent/binomial_heap.ts)<sup>[[5]](References)</sup> - persistent, uses array as subtree storage
+ - [Finger Heap](src/persistent/finger_heap.ts) - persistent, uses Finger Tree as storage
+ - [Finger Vector](src/persistent/finger_vector.ts) - persistent, uses Finger Tree as storage
+ - [Finger Tree](src/persistent/finger_tree.ts) <sup>[[6]](References)[[7]](References)</sup> - persistent, amortised O(1) dequeue operations, efficient split/concatenation  
  Note: This implementation uses a strict spine. This means that the cost of the amortised operations is payed upfront and when that happens, the triggering operation pays the full O(log n) cost. However, the amortised complexities still hold, unless a bad data structure is purposefully reused multiple times.
 
 
@@ -21,4 +21,10 @@ To derive a max heap, simply invert the comparator.
 
 ### References
 
-1. http://www.staff.city.ac.uk/~ross/papers/FingerTree.html
+1. https://en.wikipedia.org/wiki/Binary_heap
+2. https://en.wikipedia.org/wiki/Pairing_heap
+3. https://en.wikipedia.org/wiki/Leftist_tree
+4. https://en.wikipedia.org/wiki/Skew_heap
+5. https://en.wikipedia.org/wiki/Binomial_heap
+6. https://en.wikipedia.org/wiki/Finger_tree
+7. http://www.staff.city.ac.uk/~ross/papers/FingerTree.html
