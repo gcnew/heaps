@@ -7,7 +7,7 @@ import { mkRandomArray } from '../utils'
 import {
     FingerVector,
 
-    mkVector, length, isEmpty,
+    mkVector, singleton, length, isEmpty,
 
     cons, snoc, head, last, popLeft, popRight,
 
@@ -21,17 +21,17 @@ const arr10 = mkRandomArray(10);
 const arr100 = mkRandomArray(100);
 const arr1000 = mkRandomArray(1000);
 
-const vec1c    = arr1.reduce((acc, x) => cons(x, acc), mkVector<number>());
+const vec1c    = singleton(arr1[0]);
 const vec10c   = arr10.reduce((acc, x) => cons(x, acc), mkVector<number>());
 const vec100c  = arr100.reduce((acc, x) => cons(x, acc), mkVector<number>());
 const vec1000c = arr1000.reduce((acc, x) => cons(x, acc), mkVector<number>());
 
-const vec1s    = arr1.reduce((acc, x) => snoc(x, acc), mkVector<number>());
+const vec1s    = singleton(arr1[0]);
 const vec10s   = arr10.reduce((acc, x) => snoc(x, acc), mkVector<number>());
 const vec100s  = arr100.reduce((acc, x) => snoc(x, acc), mkVector<number>());
 const vec1000s = arr1000.reduce((acc, x) => snoc(x, acc), mkVector<number>());
 
-const vec1sc    = arr1.reduce((acc, x, i) => (i & 1 ? snoc : cons)(x, acc), mkVector<number>());
+const vec1sc    = singleton(arr1[0]);
 const vec10sc   = arr10.reduce((acc, x, i) => (i & 1 ? snoc : cons)(x, acc), mkVector<number>());
 const vec100sc  = arr100.reduce((acc, x, i) => (i & 1 ? snoc : cons)(x, acc), mkVector<number>());
 const vec1000sc = arr1000.reduce((acc, x, i) => (i & 1 ? snoc : cons)(x, acc), mkVector<number>());
