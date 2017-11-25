@@ -3,7 +3,6 @@ import { test } from 'pietr'
 import { assert } from 'chai'
 
 import { OrdComparator, invert, naturalComparator, naturalOrdComparator } from '../src/ordering'
-import { numComp, numOrdCmp, mkRandomArray, replicate } from './utils'
 
 export { Map, MapDict, testMap }
 
@@ -169,7 +168,7 @@ function testMap(
             mkMap<string, number>(naturalOrdComparator)
         );
 
-        checkSameProps(testObj, testMap);
+        checkSameProps(testObj, map);
     });
 
     test(`${ prefix } :: insert descending`, () => {
@@ -180,7 +179,7 @@ function testMap(
             mkMap<string, number>(naturalOrdComparator)
         );
 
-        checkSameProps(testObj, testMap);
+        checkSameProps(testObj, map);
     });
 
     test(`${ prefix } :: remove`, () => {

@@ -1,5 +1,5 @@
 
-import { OrdComparator, toComparator } from '../src/ordering'
+import { toComparator } from '../src/ordering'
 
 export {
     numComp, numOrdCmp, mkRandomArray, replicate
