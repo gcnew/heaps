@@ -23,6 +23,9 @@ export {
 // Haskell's Data.Map
 //     https://hackage.haskell.org/package/containers-0.5.10.2/docs/Data-Map-Lazy.html
 
+
+/* Types & Constants */
+
 interface Bin<K, V> {
     key: K,
     value: V,
@@ -36,7 +39,7 @@ type WBT<K, V> = Bin<K, V> | undefined
 // NOTE:
 // According to `Balancing weight-balanced trees`, Hirai & Yamamoto
 // only (4,2) and (3,2) work for (delta, gamma).
-// However, to Haskell's Data.Map source notes that (3,2) is faster for inserts
+// However, Haskell's Data.Map source notes that (3,2) is faster for inserts
 // and (4,2) for deletes, so I chose (as they did as well) (3,2).
 
 const DELTA = 3;
@@ -46,6 +49,9 @@ interface WeightBalancedTree<K, V> {
     comparator: OrdComparator<K>,
     tree: WBT<K, V>
 }
+
+
+/* API */
 
 function newTree<K, V>(comparator: OrdComparator<K>): WeightBalancedTree<K, V> {
     return mkTree(undefined, comparator);
@@ -133,31 +139,6 @@ function foldl<K, V, A>(wbt: WeightBalancedTree<K, V>, initial: A, f: (acc: A, k
 
 function sizeWorker<K, V>(tree: WBT<K, V>): number {
     return tree ? tree.size : 0;
-}
-
-function isBalanced<K, V>(left: WBT<K, V>, right: WBT<K, V>): boolean {
-    const ls = sizeWorker(left);
-    const rs = sizeWorker(right);
-
-    return ls + rs <= 1 || DELTA * ls >= rs;
-}
-
-function checkBalancedWorker<K, V>(tree: WBT<K, V>): boolean {
-    if (!tree) {
-        return true;
-    }
-
-    return isBalanced(tree.left, tree.right)
-        && isBalanced(tree.right, tree.left)
-        && checkBalancedWorker(tree.left)
-        && checkBalancedWorker(tree.right);
-}
-
-function isSingle<K, V>(left: WBT<K, V>, right: WBT<K, V>): boolean {
-    const ls = sizeWorker(left);
-    const rs = sizeWorker(right);
-
-    return ls < GAMMA * rs;
 }
 
 function memberWorker<K, V>(key: K, tree: WBT<K, V>, cmp: OrdComparator<K>): boolean {
@@ -268,25 +249,6 @@ function unassocWorker<K, V>(key: K, tree: WBT<K, V>, cmp: OrdComparator<K>): [V
     }
 }
 
-function glue<K, V>(left: WBT<K, V>, right: WBT<K, V>): WBT<K, V> {
-    if (!left) {
-        return right;
-    }
-
-    if (!right) {
-        return left;
-    }
-
-    if (sizeWorker(left) > sizeWorker(right)) {
-        const [key, val, l] = removeMaxWorker(left);
-        return balanceL(key, val, l, right);
-    }
-    else {
-        const [key, val, r] = removeMinWorker(right);
-        return balanceR(key, val, left, r);
-    }
-}
-
 function removeMaxWorker<K, V>(tree: Bin<K, V>): [K, V, WBT<K, V>] {
     if (!tree.right) {
         return [tree.key, tree.value, tree.left];
@@ -306,7 +268,6 @@ function removeMinWorker<K, V>(tree: Bin<K, V>): [K, V, WBT<K, V>] {
     const newTree = balance(tree.key, tree.value, left, tree.right);
     return [ key, val, newTree ];
 }
-
 
 function mapWorker<K, A, B>(wbt: WBT<K, A>, f: (value: A) => B): WBT<K, B> {
     if (!wbt) {
@@ -337,6 +298,50 @@ function foldlWorker<K, V, A>(wbt: WBT<K, V>, initial: A, f: (acc: A, key: K, va
 
     const l = foldlWorker(wbt.left, initial, f);
     return foldlWorker(wbt.right, f(l, wbt.key, wbt.value), f);
+}
+
+function glue<K, V>(left: WBT<K, V>, right: WBT<K, V>): WBT<K, V> {
+    if (!left) {
+        return right;
+    }
+
+    if (!right) {
+        return left;
+    }
+
+    if (sizeWorker(left) > sizeWorker(right)) {
+        const [key, val, l] = removeMaxWorker(left);
+        return balanceL(key, val, l, right);
+    }
+    else {
+        const [key, val, r] = removeMinWorker(right);
+        return balanceR(key, val, left, r);
+    }
+}
+
+function isBalanced<K, V>(left: WBT<K, V>, right: WBT<K, V>): boolean {
+    const ls = sizeWorker(left);
+    const rs = sizeWorker(right);
+
+    return ls + rs <= 1 || DELTA * ls >= rs;
+}
+
+function checkBalancedWorker<K, V>(tree: WBT<K, V>): boolean {
+    if (!tree) {
+        return true;
+    }
+
+    return isBalanced(tree.left, tree.right)
+        && isBalanced(tree.right, tree.left)
+        && checkBalancedWorker(tree.left)
+        && checkBalancedWorker(tree.right);
+}
+
+function isSingle<K, V>(left: WBT<K, V>, right: WBT<K, V>): boolean {
+    const ls = sizeWorker(left);
+    const rs = sizeWorker(right);
+
+    return ls < GAMMA * rs;
 }
 
 function balance<K, V>(key: K, value: V, left: WBT<K, V>, right: WBT<K, V>): Bin<K, V> {
@@ -449,6 +454,8 @@ function rotDoubleR<K, V>(key: K, value: V, left: Bin<K, V>, right: WBT<K, V>): 
     );
 }
 
+
+/* Constructors */
 
 function mkBin<K, V>(key: K, value: V, left: WBT<K, V>, right: WBT<K, V>): Bin<K, V> {
     const size = sizeWorker(left) + sizeWorker(right) + 1;
