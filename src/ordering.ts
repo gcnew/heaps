@@ -1,8 +1,10 @@
 
+import { Eq } from './eq'
+
 export {
     Ordering, Comparator, OrdComparator, Relator,
 
-    fromComparator, toComparator, toRelator, invert,
+    fromComparator, toComparator, toRelator, toEq, invert,
 
     naturalComparator, naturalOrdComparator
 }
@@ -44,6 +46,10 @@ function toRelator<T>(cmp: OrdComparator<T>): Relator<T> {
             case 'GTE': return res !== 'LT';
         }
     };
+}
+
+function toEq<T>(cmp: OrdComparator<T>): Eq<T> {
+    return (x, y) => cmp(x, y) === 'EQ';
 }
 
 // Same as flip

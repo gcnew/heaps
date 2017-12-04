@@ -2,7 +2,7 @@
 import { toComparator } from '../src/ordering'
 
 export {
-    numComp, numOrdCmp, mkRandomArray, replicate
+    numComp, numOrdCmp, mkRandomArray, replicate, assertFail
 }
 
 
@@ -31,4 +31,8 @@ function replicate<T>(x: T, n: number) {
     }
 
     return retval;
+}
+
+function assertFail(): never {
+    throw new Error('assert: fail');
 }

@@ -2,6 +2,9 @@
 import { test } from 'pietr'
 import { assert } from 'chai'
 
+import { assertFail } from './utils'
+import { strictEq } from '../src/eq'
+import { HashEqDict, mkHashEqDict, stringHash } from '../src/hashing'
 import { OrdComparator, invert, naturalComparator, naturalOrdComparator } from '../src/ordering'
 
 export { Map, MapDict, testMap }
@@ -16,8 +19,8 @@ interface MapLike<V> {
 }
 
 interface MapDict {
-    mkMap:        <K, V>(cmp: OrdComparator<K>) => Map<K, V>,
-    singleton:    <K, V>(key: K, value: V, cmp: OrdComparator<K>) => Map<K, V>,
+    mkMap:        <K, V>(cmp: OrdComparator<K>, dict: HashEqDict<K>) => Map<K, V>,
+    singleton:    <K, V>(key: K, value: V, cmp: OrdComparator<K>, dict: HashEqDict<K>) => Map<K, V>,
     isEmpty:      <K, V>(map: Map<K, V>) => boolean,
     size:         <K, V>(map: Map<K, V>) => number,
     member:       <K, V>(key: K, map: Map<K, V>) => boolean,
@@ -31,6 +34,9 @@ interface MapDict {
     foldr:        <K, V, A>(map: Map<K, V>, initial: A, f: (key: K, value: V, acc: A) => A) => A,
     foldl:        <K, V, A>(map: Map<K, V>, initial: A, f: (acc: A, key: K, value: V) => A) => A
 }
+
+const StringDict = mkHashEqDict(stringHash, strictEq);
+const NumberDict = mkHashEqDict((x: number) => x, strictEq);
 
 const adjectives = [
     'good',   'evil',  'strong',    'weak',   'smart',
@@ -62,16 +68,21 @@ function generateKey() {
     return adj + '-' + noun + '-' + idx;
 }
 
+function generateUniqueKey<T>(obj: MapLike<T>) {
+    let key;
+
+    do {
+        key = generateKey();
+    } while (obj[key] !== undefined);
+
+    return key;
+}
+
 function mkRandomObject(n: number) {
     const retval: { [key: string]: number } = {};
 
     for (let i = 0; i < n; ++i) {
-        let key;
-
-        do {
-            key = generateKey();
-        } while (retval[key] !== undefined);
-
+        let key = generateUniqueKey(retval);
         retval[key] = Math.random() * 1000 | 0;
     }
 
@@ -80,7 +91,10 @@ function mkRandomObject(n: number) {
 
 function testMap(
     prefix: string,
-    persistentRemove: boolean,
+    { ordered, idRemove }: {
+        ordered: boolean,
+        idRemove: boolean
+    },
     { mkMap, singleton, isEmpty, size, member, lookup, insert,
       remove, unassoc, removeMin, removeMax, map, foldr, foldl
     }: MapDict
@@ -88,7 +102,7 @@ function testMap(
     function fromObject<V>(obj: { [key: string]: V }): Map<string, V> {
         return Object.keys(obj).reduce(
             (m, k) => insert(k, obj[k], m),
-            mkMap<string, V>(naturalOrdComparator)
+            mkMap<string, V>(naturalOrdComparator, StringDict)
         );
     }
 
@@ -105,12 +119,17 @@ function testMap(
         return JSON.parse(JSON.stringify(x));
     }
 
+    const __emptyStringMap = mkMap<string, any>(naturalOrdComparator, StringDict);
+    function emptyStringMap<T>(): Map<string, T> {
+        return __emptyStringMap;
+    }
+
     const obj1    = { test: 'value' };
     const obj10   = mkRandomObject(10);
     const obj100  = mkRandomObject(100);
     const obj1000 = mkRandomObject(1000);
 
-    const map1    = singleton('test', 'value', naturalOrdComparator);
+    const map1    = singleton('test', 'value', naturalOrdComparator, StringDict);
     const map10   = fromObject(obj10);
     const map100  = fromObject(obj100);
     const map1000 = fromObject(obj1000);
@@ -119,7 +138,7 @@ function testMap(
     const testMap = map100;
 
     test(`${ prefix } :: empty / size`, () => {
-        const m0 = mkMap<string, number>(naturalOrdComparator);
+        const m0 = mkMap<string, number>(naturalOrdComparator, StringDict);
         const m1 = insert("hello", 1, m0);
         const m2 = insert("world", 2, m1);
 
@@ -165,7 +184,7 @@ function testMap(
 
         const map = keys.reduce(
             (m, k) => insert(k, testObj[k], m),
-            mkMap<string, number>(naturalOrdComparator)
+            mkMap<string, number>(naturalOrdComparator, StringDict)
         );
 
         checkSameProps(testObj, map);
@@ -176,7 +195,7 @@ function testMap(
 
         const map = keys.reduce(
             (m, k) => insert(k, testObj[k], m),
-            mkMap<string, number>(naturalOrdComparator)
+            mkMap<string, number>(naturalOrdComparator, StringDict)
         );
 
         checkSameProps(testObj, map);
@@ -248,7 +267,7 @@ function testMap(
     });
 
     test(`${ prefix } :: update`, () => {
-        const m0 = mkMap<string, string>(naturalOrdComparator);
+        const m0 = mkMap<string, string>(naturalOrdComparator, StringDict);
         const m1 = insert('token', 'string', m0);
         const m2 = insert('token', 'number', m1);
         const m3 = insert('token', 'object', m2);
@@ -267,11 +286,19 @@ function testMap(
     });
 
     test(`${ prefix } :: foldr`, () => {
-        const keys = Object.keys(testObj).sort(naturalComparator);
+        assert.equal(foldr(emptyStringMap(), 10, assertFail), 10);
 
+        const found: MapLike<boolean> = {};
+        const keys = Object.keys(testObj).sort(naturalComparator);
         const res = foldr(testMap, keys.length, (k, v, idx) => {
-            assert.equal(k, keys[idx - 1]);
             assert.equal(v, testObj[k]);
+            if (ordered) {
+                assert.equal(k, keys[idx - 1]);
+            }
+            else {
+                assert.equal(found[k], undefined);
+                found[k] = true;
+            }
 
             return idx - 1;
         });
@@ -280,11 +307,19 @@ function testMap(
     });
 
     test(`${ prefix } :: foldl`, () => {
-        const keys = Object.keys(testObj).sort(naturalComparator);
+        assert.equal(foldl(emptyStringMap(), 10, assertFail), 10);
 
+        const found: MapLike<boolean> = {};
+        const keys = Object.keys(testObj).sort(naturalComparator);
         const res = foldl(testMap, 0, (idx, k, v) => {
-            assert.equal(k, keys[idx]);
             assert.equal(v, testObj[k]);
+            if (ordered) {
+                assert.equal(k, keys[idx]);
+            }
+            else {
+                assert.equal(found[k], undefined);
+                found[k] = true;
+            }
 
             return idx + 1;
         });
@@ -296,7 +331,7 @@ function testMap(
         const values = [0,2,5,1,6,4,8,9,7,11,10,3];
         const m0 = values.reduce(
             (acc, i) => insert(i, i, acc),
-            mkMap<number, number>(naturalOrdComparator)
+            mkMap<number, number>(naturalOrdComparator, NumberDict)
         );
 
         const m1 = remove(0, m0);
@@ -309,7 +344,7 @@ function testMap(
         const values = [0,2,5,1,6,4,8,9,7,11,10,3];
         const m0 = values.reduce(
             (acc, i) => insert(i, i, acc),
-            mkMap<number, number>(naturalOrdComparator)
+            mkMap<number, number>(naturalOrdComparator, NumberDict)
         );
 
         const [k1, v1, m1] = removeMin(m0);
@@ -322,11 +357,23 @@ function testMap(
         assert.equal(size(m2), values.length - 2);
     });
 
-    persistentRemove && test(`${ prefix } :: same reference when removing nonexistent elements`, () => {
-        assert.equal(remove('Joe Cocker', testMap), testMap);
+    idRemove && test(`${ prefix } :: same reference when removing nonexistent elements`, () => {
+        const emptyMap = emptyStringMap();
+        assert.equal(remove('Joe Cocker', emptyMap), emptyMap);
 
-        const [value, map] = unassoc('Joe Cocker', testMap);
-        assert.equal(map, testMap);
+        const [value, map] = unassoc('Joe Cocker', emptyMap);
+        assert.equal(map, emptyMap);
         assert.equal(value, undefined);
+
+        const count = Object.keys(testObj).length;
+        for (let i = 0; i < count; ++i) {
+            const key = generateUniqueKey(testObj);
+
+            assert.equal(remove(key, testMap), testMap);
+
+            const [value, map] = unassoc(key, testMap);
+            assert.equal(map, testMap);
+            assert.equal(value, undefined);
+        }
     });
 }

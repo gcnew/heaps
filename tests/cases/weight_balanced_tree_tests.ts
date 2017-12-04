@@ -36,4 +36,8 @@ const Dict: Record<keyof MapDict, any> = {
     foldl:        WBT.foldl
 };
 
-testMap('WeightBalancedTree', true, Dict);
+testMap(
+    'WeightBalancedTree',
+    { ordered: true, idRemove: true },
+    Dict
+);
