@@ -21,5 +21,7 @@ testHeap<BinHeap<number>>('BinHeap', false, {
             : undefined;
     },
 
+    peek: BinHeapDict.peek,
+
     heapify: BinHeapDict.heapify
 });

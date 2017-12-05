@@ -258,6 +258,8 @@ function testMap(
     test(`${ prefix } :: map`, () => {
         const f = (x: number) => String(x * 5);
 
+        assert.equal(map(emptyStringMap(), assertFail), emptyStringMap());
+
         const m = map(testMap, x => f(x));
         const o = Object.keys(testObj).reduce(
             (acc, k) => (acc[k] = f(testObj[k]), acc), {} as MapLike<string>

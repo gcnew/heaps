@@ -123,6 +123,10 @@ function removeMax<K, V>(wbt: WeightBalancedTree<K, V>): [K|undefined, V|undefin
 }
 
 function map<K, A, B>(wbt: WeightBalancedTree<K, A>, f: (value: A) => B): WeightBalancedTree<K, B> {
+    if (!wbt.tree) {
+        return wbt as any as WeightBalancedTree<K, B>; // TYH
+    }
+
     return mkTree(mapWorker(wbt.tree, f), wbt.comparator);
 }
 

@@ -10,12 +10,13 @@ export { testHeap }
 function testHeap<H>(
     prefix: string,
     isPersistent: boolean,
-    { mkHeap, singleton, isEmpty, push, pop, heapify }: {
+    { mkHeap, singleton, isEmpty, push, pop, peek, heapify }: {
         mkHeap:    (cmp: OrdComparator<number>) => H,
         singleton: (x: number, cmp: OrdComparator<number>) => H,
         isEmpty:   (heap: H) => boolean,
         push:      (x: number, heap: H) => H,
         pop:       (heap: H) => [number, H] | undefined,
+        peek:      (heap: H) => number | undefined,
         heapify:   (items: number[], cmp: OrdComparator<number>) => H
     }
 ) {
@@ -43,7 +44,7 @@ function testHeap<H>(
         }
     });
 
-    test(`${ prefix } :: Push / Pop`, () => {
+    test(`${ prefix } :: Push / Pop / Peek`, () => {
         for (let i = 0; i < 4; ++i) {
             const arr = mkRandomArray(10 ** i);
             const sorted = arr.slice().sort(numComp);
@@ -53,17 +54,20 @@ function testHeap<H>(
                 heap = push(arr[k], heap);
             }
 
-            let item;
+            let item, peeked;
             while (sorted.length) {
+                peeked = peek(heap);
                 [ item, heap ] = pop(heap)!;
                 assert.equal(item, sorted.shift());
+                assert.equal(peeked, item);
             }
 
             assert.isTrue(isEmpty(heap));
+            assert.equal(peek(heap), undefined);
         }
     });
 
-    test(`${ prefix } :: Push / Pop - max heap`, () => {
+    test(`${ prefix } :: Push / Pop / Peek - max heap`, () => {
         const ordCmp = invert(numOrdCmp);
         const numCmp = (x: number, y: number) => numComp(x, y) * -1;
 
@@ -76,13 +80,16 @@ function testHeap<H>(
                 heap = push(arr[k], heap);
             }
 
-            let item;
+            let item, peeked;
             while (sorted.length) {
+                peeked = peek(heap);
                 [ item, heap ] = pop(heap)!;
                 assert.equal(item, sorted.shift());
+                assert.equal(peeked, item);
             }
 
             assert.isTrue(isEmpty(heap));
+            assert.equal(peek(heap), undefined);
         }
     });
 
