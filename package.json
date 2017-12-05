@@ -25,13 +25,16 @@
 
         "source-map-support": "",
         "chai": "",
+        "istanbul": "",
 
         "@types/chai": ""
     },
 
     "scripts": {
         "test-no-build": "pietr --require=source-map-support/register --pattern='built/**/*.js'",
-        "test":          "tsc && npm run test-no-build"
+        "test":          "tsc && npm run test-no-build",
+        "cov-no-build":  "istanbul cover pietr -- --require=source-map-support/register --pattern='built/**/*.js'",
+        "cov":           "tsc && npm run cov-no-build"
     },
 
     "private": true
