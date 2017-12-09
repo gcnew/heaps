@@ -15,13 +15,13 @@ type HashEqDict<T> = {
 }
 
 function stringHash(str: string): number {
-    let hash = 0;
+    let hash = 0 | 0;
 
     for (let i = 0; i < str.length; ++i) {
-        hash = hash * 31 + str.charCodeAt(i);
+        hash = Math.imul(hash, 5) + str.charCodeAt(i) | 0;
     }
 
-    return hash & 0x0FFFFFFFF;
+    return hash;
 }
 
 function mkHashEqDict<T>(hash: HashFunc<T>, eq: Eq<T>): HashEqDict<T> {
