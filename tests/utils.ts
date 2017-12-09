@@ -2,7 +2,7 @@
 import { toComparator } from '../src/ordering'
 
 export {
-    numComp, numOrdCmp, mkRandomArray, replicate, assertFail
+    numComp, numOrdCmp, mkRandomArray, replicate, inplaceShuffle, assertFail
 }
 
 
@@ -31,6 +31,16 @@ function replicate<T>(x: T, n: number) {
     }
 
     return retval;
+}
+
+// see https://stackoverflow.com/a/12646864
+function inplaceShuffle<T>(arr: T[]): T[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.random() * (i + 1) | 0;
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    return arr;
 }
 
 function assertFail(): never {

@@ -259,11 +259,9 @@ function merge<K, V>(key: K, value: V, hash: number, shift: number, kvh: Value<K
     if (shift >= HASH_SZ || hash === kvh.hash) {
         const insertValue = mkValue(key, value, hash);
 
-        if (kvh.kind === 'chain') {
-            return mkChain(hash, prepend(insertValue, kvh.data));
-        }
-
-        return mkChain(hash, [insertValue, kvh]);
+        return kvh.kind === 'chain'
+            ? mkChain(hash, prepend(insertValue, kvh.data))
+            : mkChain(hash, [insertValue, kvh]);
     }
 
     const h1 = (hash >>> shift) & MASK;

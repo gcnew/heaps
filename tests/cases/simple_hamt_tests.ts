@@ -22,6 +22,6 @@ const Dict: Record<keyof MapDict, any> = {
 
 testMap(
     'HAMT',
-    { ordered: false, idRemove: true },
+    { hashed: true, ordered: false, idRemove: true },
     Dict
 );

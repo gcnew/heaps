@@ -29,8 +29,8 @@ const Dict: Record<keyof MapDict, any> = {
     insert:       assertBalanced(WBT.insert),
     remove:       assertBalanced(WBT.remove),
     unassoc:      assertBalanced(WBT.unassoc, x => x[1]),
-    removeMin:    assertBalanced(WBT.removeMin, x => x[1]),
-    removeMax:    assertBalanced(WBT.removeMax, x => x[1]),
+    removeMin:    assertBalanced(WBT.removeMin, x => x[2]),
+    removeMax:    assertBalanced(WBT.removeMax, x => x[2]),
     map:          assertBalanced(WBT.map),
     foldr:        WBT.foldr,
     foldl:        WBT.foldl
@@ -38,6 +38,6 @@ const Dict: Record<keyof MapDict, any> = {
 
 testMap(
     'WeightBalancedTree',
-    { ordered: true, idRemove: true },
+    { hashed: false, ordered: true, idRemove: true },
     Dict
 );
