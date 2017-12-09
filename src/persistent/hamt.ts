@@ -425,7 +425,7 @@ function mapWorker<K, A, B>(
 
 /* Helpers */
 
-function prepend<T, U extends T>(x: U, xs: T[]): T[] {
+function prepend<T>(x: T, xs: T[]): T[] {
     const retval = new Array(xs.length);
 
     retval[0] = x;
@@ -436,7 +436,7 @@ function prepend<T, U extends T>(x: U, xs: T[]): T[] {
     return retval;
 }
 
-function update<T, U extends T>(x: U, idx: number, xs: T[]): T[] {
+function update<T>(x: T, idx: number, xs: T[]): T[] {
     const retval = new Array(xs.length);
 
     for (let i = 0; i < xs.length; ++i) {
@@ -447,7 +447,7 @@ function update<T, U extends T>(x: U, idx: number, xs: T[]): T[] {
     return retval;
 }
 
-function arrInsert<T, U extends T>(x: U, idx: number, xs: T[]): T[] {
+function arrInsert<T>(x: T, idx: number, xs: T[]): T[] {
     const retval = new Array(xs.length + 1);
 
     for (let i = 0; i < idx; ++i) {
