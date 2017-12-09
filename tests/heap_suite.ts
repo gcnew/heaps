@@ -63,6 +63,7 @@ function testHeap<H>(
             }
 
             assert.isTrue(isEmpty(heap));
+            assert.equal(pop(heap), undefined);
             assert.equal(peek(heap), undefined);
         }
     });

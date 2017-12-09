@@ -41,14 +41,14 @@ function peek<T>(heap: FingerHeap<T>): T | undefined {
 }
 
 function pop<T>(heap: FingerHeap<T>): [T, FingerHeap<T>] | undefined {
-    const item = peek(heap);
-    if (item === undefined) {
+    const measurement = FT.measure(heap);
+    if (measurement.kind === 'empty') {
         return undefined;
     }
 
     const split = FT.splitWithItem(
         heap,
-        x => x.kind === 'boxed' && x.item === item
+        x => x.kind === 'boxed' && x.item === measurement.item
     );
 
     return split && [ split[1], FT.concat(split[0], split[2]) ];
