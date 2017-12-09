@@ -114,14 +114,14 @@ function map<K, A, B>(hamt: HAMT<K, A>, f: (value: A) => B): HAMT<K, B> {
     }
 
     const mapper: any = (x: Trie<K, A> | Value<K, A>): Trie<K, B> | Value<K, B> => {  // TYH
-        if (x.kind === 'value') {
-            return mkValue(x.key, f(x.value), x.hash);
+        switch (x.kind) {
+            case 'value':  return mkValue(x.key, f(x.value), x.hash);
+            case 'bitmap': return mkBitmap(x.bitmap, x.data.map(mapper));
+            case 'chain':  return mkChain(x.hash, x.data.map(mapper));
         }
-
-        return mapWorker(x, mapper);
     };
 
-    return mkTrie(mapWorker(hamt.trie, mapper), hamt.dict);
+    return mkTrie(mapper(hamt.trie), hamt.dict);
 }
 
 function foldr<K, V, A>(hamt: HAMT<K, V>, initial: A, f: (key: K, value: V, acc: A) => A): A {
@@ -406,20 +406,6 @@ function unassocWorker<K, V>(
 
     const newData = arrRemove(bitIndex, trie.data);
     return [returnValue, mkBitmap(trie.bitmap ^ (1 << hashIdx), newData)];
-}
-
-function mapWorker<K, A, B>(
-    trie: Trie<K, A>,
-    f: {
-        (x: Value<K, A>): Value<K, B>,
-        (x: Trie<K, A> | Value<K, A>): Trie<K, B> | Value<K, B>,
-    }
-): Trie<K, B> {
-    if (trie.kind === 'bitmap') {
-        return mkBitmap(trie.bitmap, trie.data.map(f));
-    }
-
-    return mkChain(trie.hash, trie.data.map<Value<K, B>>(f)); // TYH
 }
 
 
