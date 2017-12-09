@@ -13,6 +13,7 @@
  - [Finger Tree](src/persistent/finger_tree.ts) <sup>[[6]](#references)[[7]](#references)</sup> - persistent, amortised O(1) dequeue operations, efficient split/concatenation  
  Note: This implementation uses a strict spine. This means that the cost of the amortised operations is payed upfront and when that happens, the triggering operation pays the full O(log n) cost. However, the amortised complexities still hold, unless a bad data structure is purposefully reused multiple times.
  - [Weight-Balanced Tree](src/persistent/weight_balanced_tree.ts)<sup>[[8]](#references)[[9]](#references)[[10]](#references)</sup> - persistent, ordered, Map interface
+ - [Hash Array Mapped Trie (HAMT)](src/persistent/hamt.ts)<sup>[[11]](#references)[[12]](#references)[[13]](#references)</sup> - persistent, hash based, Map interface
 
 
 ### A note on implementation
@@ -32,3 +33,6 @@ To derive a max heap, simply invert the comparator.
 8. http://www.mew.org/~kazu/proj/weight-balanced-tree/
 9. https://hackage.haskell.org/package/containers-0.5.10.2/docs/Data-Map-Lazy.html
 10. https://en.wikipedia.org/wiki/Weight-balanced_tree
+11. http://blog.higher-order.net/2009/09/08/understanding-clojures-persistenthashmap-deftwice
+12. https://infoscience.epfl.ch/record/64398/files/idealhashtrees.pdf
+13. https://en.wikipedia.org/wiki/Hash_array_mapped_trie
