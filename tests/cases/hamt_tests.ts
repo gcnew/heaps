@@ -1,7 +1,7 @@
 
 import { testMap, MapDict } from '../map_suite'
 
-import * as HAMT from '../../src/persistent/simple_hamt'
+import * as HAMT from '../../src/persistent/hamt'
 
 const Dict: Record<keyof MapDict, any> = {
     mkMap:        (_: any, dict: any) => HAMT.mkTrie(dict),
