@@ -113,15 +113,7 @@ function map<K, A, B>(hamt: HAMT<K, A>, f: (value: A) => B): HAMT<K, B> {
         return hamt as HAMT<K, B>; // TYH
     }
 
-    const mapper: any = (x: Trie<K, A> | Value<K, A>): Trie<K, B> | Value<K, B> => {  // TYH
-        switch (x.kind) {
-            case 'value':  return mkValue(x.key, f(x.value), x.hash);
-            case 'bitmap': return mkBitmap(x.bitmap, x.data.map(mapper));
-            case 'chain':  return mkChain(x.hash, x.data.map(mapper));
-        }
-    };
-
-    return mkTrie(mapper(hamt.trie), hamt.dict);
+    return mkTrie(mapWorker(f, hamt.trie) as Trie<K, B>, hamt.dict); // TYH
 }
 
 function foldr<K, V, A>(hamt: HAMT<K, V>, initial: A, f: (key: K, value: V, acc: A) => A): A {
@@ -129,15 +121,7 @@ function foldr<K, V, A>(hamt: HAMT<K, V>, initial: A, f: (key: K, value: V, acc:
         return initial;
     }
 
-    const foldFunc = (acc: A, x: Trie<K, V> | Value<K, V>) => {
-        if (x.kind === 'value') {
-            return f(x.key, x.value, acc);
-        }
-
-        return (<any> x.data.reduceRight)(foldFunc, acc); // TYH
-    };
-
-    return foldFunc(initial, hamt.trie);
+    return foldrWorker(f, initial, hamt.trie);
 }
 
 function foldl<K, V, A>(hamt: HAMT<K, V>, initial: A, f: (acc: A, key: K, value: V) => A): A {
@@ -145,15 +129,7 @@ function foldl<K, V, A>(hamt: HAMT<K, V>, initial: A, f: (acc: A, key: K, value:
         return initial;
     }
 
-    const foldFunc = (acc: A, x: Trie<K, V> | Value<K, V>) => {
-        if (x.kind === 'value') {
-            return f(acc, x.key, x.value);
-        }
-
-        return (<any> x.data.reduce)(foldFunc, acc); // TYH
-    };
-
-    return foldFunc(initial, hamt.trie);
+    return foldlWorker(f, initial, hamt.trie);
 }
 
 
@@ -406,6 +382,49 @@ function unassocWorker<K, V>(
 
     const newData = arrRemove(bitIndex, trie.data);
     return [returnValue, mkBitmap(trie.bitmap ^ (1 << hashIdx), newData)];
+}
+
+function mapWorker<K, A, B>(f: (value: A) => B, x: Trie<K, A> | Value<K, A>): Trie<K, B> | Value<K, B> {
+    if (x.kind === 'value') {
+        return mkValue(x.key, f(x.value), x.hash);
+    }
+
+    const data = x.data;
+    const newData = new Array(data.length);
+
+    for (let i = 0; i < data.length; ++i) {
+        newData[i] = mapWorker(f, data[i]);
+    }
+
+    return x.kind === 'bitmap'
+        ? mkBitmap(x.bitmap, newData)
+        : mkChain(x.hash, newData);
+}
+
+function foldrWorker<K, V, A>(f: (key: K, value: V, acc: A) => A, acc: A, x: Trie<K, V> | Value<K, V>) {
+    if (x.kind === 'value') {
+        return f(x.key, x.value, acc);
+    }
+
+    const data = x.data;
+    for (let i = 0; i < data.length; ++i) {
+        acc = foldrWorker(f, acc, data[i]);
+    }
+
+    return acc;
+}
+
+function foldlWorker<K, V, A>(f: (acc: A, key: K, value: V) => A, acc: A, x: Trie<K, V> | Value<K, V>) {
+    if (x.kind === 'value') {
+        return f(acc, x.key, x.value);
+    }
+
+    const data = x.data;
+    for (let i = 0; i < data.length; ++i) {
+        acc = foldlWorker(f, acc, data[i]);
+    }
+
+    return acc;
 }
 
 
